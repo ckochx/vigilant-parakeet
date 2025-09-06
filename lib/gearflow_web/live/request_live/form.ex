@@ -24,9 +24,29 @@ defmodule GearflowWeb.RequestLive.Form do
 
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Describe the problem or request
-                </label>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">
+                    Describe the problem or request
+                  </label>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      phx-click="start-speech-recognition"
+                      class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 touch-manipulation"
+                      title="Speech to text"
+                    >
+                      🎤 Speech
+                    </button>
+                    <button
+                      type="button" 
+                      phx-click="start-voice-recording"
+                      class="inline-flex items-center px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 touch-manipulation"
+                      title="Record voice memo"
+                    >
+                      🎙️ Record voice memo
+                    </button>
+                  </div>
+                </div>
                 <.input
                   field={@form[:description]}
                   type="textarea"
@@ -217,7 +237,7 @@ defmodule GearflowWeb.RequestLive.Form do
      socket
      |> assign(:return_to, return_to(params["return_to"]))
      |> allow_upload(:attachments,
-       accept: ~w(.jpg .jpeg .png .gif .mp4 .mov .avi .webm),
+       accept: ~w(.jpg .jpeg .png .gif .mp4 .mov .avi .webm .m4a .mp3 .wav .ogg),
        max_entries: 5,
        max_file_size: 20_000_000
      )
@@ -253,6 +273,28 @@ defmodule GearflowWeb.RequestLive.Form do
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
     {:noreply, cancel_upload(socket, :attachments, ref)}
+  end
+
+  def handle_event("start-speech-recognition", _params, socket) do
+    # This will trigger client-side JavaScript to start speech recognition
+    {:noreply, push_event(socket, "start-speech-recognition", %{})}
+  end
+
+  def handle_event("start-voice-recording", _params, socket) do
+    # This will trigger client-side JavaScript to start voice recording
+    {:noreply, push_event(socket, "start-voice-recording", %{})}
+  end
+
+  def handle_event("speech-result", %{"text" => text}, socket) do
+    # Update the form with the speech recognition result
+    changeset = socket.assigns.form.source
+    current_description = Ecto.Changeset.get_field(changeset, :description) || ""
+    new_description = if current_description == "", do: text, else: "#{current_description} #{text}"
+    
+    updated_changeset = changeset
+    |> Ecto.Changeset.put_change(:description, new_description)
+    
+    {:noreply, assign(socket, form: to_form(updated_changeset, action: :validate))}
   end
 
   def handle_event("save", %{"request" => request_params}, socket) do

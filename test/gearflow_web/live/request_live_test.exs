@@ -210,7 +210,54 @@ defmodule GearflowWeb.RequestLiveTest do
 
       # Verify the file input has correct accept attribute for validation
       html = render(form_live)
-      assert html =~ "accept=\".jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.webm\""
+      assert html =~ "accept=\".jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.webm,.m4a,.mp3,.wav,.ogg\""
+    end
+
+    test "form displays speech-to-text button for mobile", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      html = render(form_live)
+      # Should have a speech input button
+      assert html =~ "phx-click=\"start-speech-recognition\""
+      assert html =~ "🎤"
+    end
+
+    test "form displays voice memo recording interface", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      html = render(form_live)
+      # Should have voice memo recording controls
+      assert html =~ "phx-click=\"start-voice-recording\""
+      assert html =~ "Record voice memo"
+    end
+
+    test "handles speech recognition results", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Simulate speech recognition result via LiveView event
+      form_live
+      |> render_hook("speech-result", %{"text" => "The hydraulic pump is leaking oil"})
+
+      html = render(form_live)
+      assert html =~ "The hydraulic pump is leaking oil"
+    end
+
+    test "handles voice memo upload", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Create a fake audio blob
+      content = "fake audio content"
+      voice_memo = %{
+        last_modified: 1_594_171_879_000,
+        name: "voice_memo.webm",
+        content: content,
+        size: byte_size(content),
+        type: "audio/webm"
+      }
+
+      # Should be able to upload voice memo as attachment
+      upload = file_input(form_live, "#request-form", :attachments, [voice_memo])
+      assert render_upload(upload, "voice_memo.webm") =~ "voice_memo.webm"
     end
   end
 

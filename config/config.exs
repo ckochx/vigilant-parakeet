@@ -60,6 +60,14 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Configure additional MIME types for audio files
+config :mime, :types, %{
+  "audio/mp4" => ["m4a"],
+  "audio/mpeg" => ["mp3"],
+  "audio/wav" => ["wav"],
+  "audio/ogg" => ["ogg"]
+}
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
