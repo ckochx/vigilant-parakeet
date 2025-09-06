@@ -151,6 +151,7 @@ defmodule GearflowWeb.RequestLiveTest do
       {:ok, form_live, _html} = live(conn, ~p"/")
 
       content = File.read!("test/support/fixtures/test_image.jpg")
+
       image =
         file_input(form_live, "#request-form", :attachments, [
           %{

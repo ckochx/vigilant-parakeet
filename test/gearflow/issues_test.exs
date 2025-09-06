@@ -134,13 +134,18 @@ defmodule Gearflow.IssuesTest do
       }
 
       assert {:ok, %Request{} = request} = Issues.create_request(attrs)
-      assert request.attachments == ["/uploads/equipment_damage.jpg", "/uploads/hydraulic_leak.mp4"]
+
+      assert request.attachments == [
+               "/uploads/equipment_damage.jpg",
+               "/uploads/hydraulic_leak.mp4"
+             ]
+
       assert length(request.attachments) == 2
     end
 
     test "update_request/2 can add attachments" do
       request = request_fixture(%{attachments: []})
-      
+
       update_attrs = %{
         attachments: ["/uploads/new_photo.jpg"]
       }
