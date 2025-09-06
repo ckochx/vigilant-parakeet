@@ -18,7 +18,14 @@ defmodule GearflowWeb.RequestLive.Form do
           </div>
         </div>
 
-        <.form for={@form} id="request-form" phx-change="validate" phx-submit="save" class="space-y-6">
+        <.form
+          for={@form}
+          id="request-form"
+          phx-change="validate"
+          phx-submit="save"
+          phx-hook="SpeechRecognition"
+          class="space-y-6"
+        >
           <div class="bg-white rounded-lg shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">What's the issue?</h2>
 
@@ -38,7 +45,7 @@ defmodule GearflowWeb.RequestLive.Form do
                       🎤 Speech
                     </button>
                     <button
-                      type="button" 
+                      type="button"
                       phx-click="start-voice-recording"
                       class="inline-flex items-center px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 touch-manipulation"
                       title="Record voice memo"
@@ -289,16 +296,25 @@ defmodule GearflowWeb.RequestLive.Form do
     # Update the form with the speech recognition result
     changeset = socket.assigns.form.source
     current_description = Ecto.Changeset.get_field(changeset, :description) || ""
-    new_description = if current_description == "", do: text, else: "#{current_description} #{text}"
-    
-    updated_changeset = changeset
-    |> Ecto.Changeset.put_change(:description, new_description)
-    
+
+    new_description =
+      if current_description == "", do: text, else: "#{current_description} #{text}"
+
+    updated_changeset =
+      changeset
+      |> Ecto.Changeset.put_change(:description, new_description)
+
     {:noreply, assign(socket, form: to_form(updated_changeset, action: :validate))}
   end
 
   def handle_event("save", %{"request" => request_params}, socket) do
     # Process uploaded files
+
+    # This would be a good place to invoke OCR on the uploaded images.
+    # We could probably pull out Model or Serial nos.
+    # a more advance image categorization could match vehicle and part types, but that would be
+    # furhter down the features road
+
     uploaded_files =
       consume_uploaded_entries(socket, :attachments, fn %{path: path}, entry ->
         dest = Path.join(["priv", "static", "uploads", "#{entry.uuid}-#{entry.client_name}"])

@@ -25,11 +25,149 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/gearflow"
 import topbar from "../vendor/topbar"
 
+// Speech Recognition Hook
+const SpeechRecognition = {
+  mounted() {
+    this.recognition = null
+    this.mediaRecorder = null
+    this.audioChunks = []
+
+    // Handle speech recognition events from server
+    this.handleEvent("start-speech-recognition", () => {
+      this.startSpeechRecognition()
+    })
+
+    // Handle voice recording events from server
+    this.handleEvent("start-voice-recording", () => {
+      this.startVoiceRecording()
+    })
+  },
+
+  startSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition not supported in this browser')
+      return
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    this.recognition = new SpeechRecognition()
+    
+    this.recognition.continuous = false
+    this.recognition.interimResults = false
+    this.recognition.lang = 'en-US'
+
+    this.recognition.onstart = () => {
+      console.log('Speech recognition started')
+    }
+
+    this.recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript
+      console.log('Speech result:', transcript)
+      
+      // Send result back to LiveView
+      this.pushEvent("speech-result", {text: transcript})
+    }
+
+    this.recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+    }
+
+    this.recognition.onend = () => {
+      console.log('Speech recognition ended')
+    }
+
+    this.recognition.start()
+  },
+
+  startVoiceRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Voice recording not supported in this browser')
+      return
+    }
+
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      // Stop recording if already recording
+      this.stopVoiceRecording()
+      return
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        this.mediaRecorder = new MediaRecorder(stream)
+        this.audioChunks = []
+
+        this.mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            this.audioChunks.push(event.data)
+          }
+        }
+
+        this.mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
+          this.handleAudioBlob(audioBlob)
+          stream.getTracks().forEach(track => track.stop())
+        }
+
+        this.mediaRecorder.start()
+        console.log('Voice recording started')
+
+        // Auto-stop after 30 seconds
+        setTimeout(() => {
+          if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.stopVoiceRecording()
+          }
+        }, 30000)
+      })
+      .catch(error => {
+        console.error('Error accessing microphone:', error)
+        alert('Could not access microphone')
+      })
+  },
+
+  stopVoiceRecording() {
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.mediaRecorder.stop()
+      console.log('Voice recording stopped')
+    }
+  },
+
+  handleAudioBlob(blob) {
+    // Create a file-like object and trigger upload
+    const file = new File([blob], `voice_memo_${Date.now()}.webm`, { type: 'audio/webm' })
+    
+    // Find the file input and simulate file selection
+    const fileInput = this.el.querySelector('input[type="file"]')
+    if (fileInput) {
+      // Create a custom file list
+      const dt = new DataTransfer()
+      dt.items.add(file)
+      fileInput.files = dt.files
+      
+      // Trigger change event to notify LiveView
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+  },
+
+  destroyed() {
+    if (this.recognition) {
+      this.recognition.stop()
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.stopVoiceRecording()
+    }
+  }
+}
+
+const hooks = {
+  ...colocatedHooks,
+  SpeechRecognition
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: hooks,
 })
 
 // Show progress bar on live navigation and form submits

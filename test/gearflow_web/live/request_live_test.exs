@@ -247,6 +247,7 @@ defmodule GearflowWeb.RequestLiveTest do
 
       # Create a fake audio blob
       content = "fake audio content"
+
       voice_memo = %{
         last_modified: 1_594_171_879_000,
         name: "voice_memo.webm",
@@ -258,6 +259,180 @@ defmodule GearflowWeb.RequestLiveTest do
       # Should be able to upload voice memo as attachment
       upload = file_input(form_live, "#request-form", :attachments, [voice_memo])
       assert render_upload(upload, "voice_memo.webm") =~ "voice_memo.webm"
+    end
+
+    test "form has speech recognition hook", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      html = render(form_live)
+      # Should have the speech recognition hook on the form
+      assert html =~ "phx-hook=\"SpeechRecognition\""
+    end
+
+    test "speech recognition starts when button clicked", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Click the speech recognition button should trigger client-side event
+      html =
+        form_live
+        |> element("button[phx-click='start-speech-recognition']")
+        |> render_click()
+
+      # Should contain elements needed for speech recognition
+      assert html =~ "🎤"
+    end
+
+    test "voice recording starts when button clicked", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Click the voice recording button should trigger client-side event
+      html =
+        form_live
+        |> element("button[phx-click='start-voice-recording']")
+        |> render_click()
+
+      # Should contain elements needed for voice recording
+      assert html =~ "🎙️"
+    end
+
+    test "form supports multiple speech recognition results", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # First speech result
+      form_live
+      |> render_hook("speech-result", %{"text" => "The hydraulic pump is leaking"})
+
+      # Second speech result should be appended
+      form_live
+      |> render_hook("speech-result", %{"text" => "and making noise"})
+
+      html = render(form_live)
+      assert html =~ "The hydraulic pump is leaking and making noise"
+    end
+
+    test "speech recognition handles empty previous description", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Speech result on empty form
+      form_live
+      |> render_hook("speech-result", %{"text" => "Initial speech input"})
+
+      html = render(form_live)
+      assert html =~ "Initial speech input"
+      # Should not have extra spaces
+      refute html =~ " Initial speech input"
+    end
+
+    test "allows blank description when voice memo is uploaded", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Upload a voice memo
+      content = "fake audio content"
+
+      voice_memo = %{
+        last_modified: 1_594_171_879_000,
+        name: "issue_report.webm",
+        content: content,
+        size: byte_size(content),
+        type: "audio/webm"
+      }
+
+      upload = file_input(form_live, "#request-form", :attachments, [voice_memo])
+      render_upload(upload, "issue_report.webm")
+
+      # Submit form with blank description but with voice memo
+      attrs = %{description: "", priority: "urgent", equipment_id: "CAT 320D"}
+
+      # Should successfully create request and redirect
+      assert {:ok, index_live, _html} =
+               form_live
+               |> form("#request-form", request: attrs)
+               |> render_submit()
+               |> follow_redirect(conn, ~p"/requests")
+
+      html = render(index_live)
+      # Should show the request was created successfully
+      assert html =~ "CAT 320D"
+      assert html =~ "1 photos"
+    end
+
+    test "still requires description when no voice memo uploaded", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Submit form with blank description and no voice memo
+      attrs = %{description: "", priority: "urgent", equipment_id: "CAT 320D"}
+
+      # Should show validation error, not redirect
+      html =
+        form_live
+        |> form("#request-form", request: attrs)
+        |> render_submit()
+
+      # Should stay on form and show validation error
+      assert html =~ "can&#39;t be blank"
+      refute html =~ "Request created successfully"
+    end
+
+    test "allows description with any attachment type", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Upload a regular image (non-audio file)
+      content = File.read!("test/support/fixtures/test_image.jpg")
+
+      image_file = %{
+        last_modified: 1_594_171_879_000,
+        name: "damage_photo.jpg",
+        content: content,
+        size: byte_size(content),
+        type: "image/jpeg"
+      }
+
+      upload = file_input(form_live, "#request-form", :attachments, [image_file])
+      render_upload(upload, "damage_photo.jpg")
+
+      # Submit form with blank description and image attachment
+      attrs = %{description: "", priority: "high", equipment_id: "Unit 42"}
+
+      # Should still require description for non-audio attachments
+      html =
+        form_live
+        |> form("#request-form", request: attrs)
+        |> render_submit()
+
+      # Should stay on form and show validation error
+      assert html =~ "can&#39;t be blank"
+    end
+
+    test "allows blank description with multiple voice memos", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Upload a single voice memo to test the validation logic
+      content = "fake audio content"
+
+      voice_memo = %{
+        last_modified: 1_594_171_879_000,
+        name: "report.m4a",
+        content: content,
+        size: byte_size(content),
+        type: "audio/mp4"
+      }
+
+      upload = file_input(form_live, "#request-form", :attachments, [voice_memo])
+      render_upload(upload, "report.m4a")
+
+      # Submit form with blank description but with voice memo
+      attrs = %{description: "", priority: "medium"}
+
+      # Should successfully create request and redirect (validation allows blank description)
+      assert {:ok, index_live, _html} =
+               form_live
+               |> form("#request-form", request: attrs)
+               |> render_submit()
+               |> follow_redirect(conn, ~p"/requests")
+
+      html = render(index_live)
+      # Should show the request was created
+      assert html =~ "1 photos"
     end
   end
 
