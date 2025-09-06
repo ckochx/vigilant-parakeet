@@ -31,7 +31,7 @@ defmodule GearflowWeb.RequestLive.Form do
                   field={@form[:description]}
                   type="textarea"
                   placeholder="Example: Final drive failure on digger unit 21784"
-                  class="text-base min-h-[120px]"
+                  class="text-base min-h-[120px] w-full textarea bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
@@ -118,7 +118,7 @@ defmodule GearflowWeb.RequestLive.Form do
                   field={@form[:equipment_id]}
                   type="text"
                   placeholder="e.g. CAT D7, Unit 21784"
-                  class="text-base"
+                  class="text-base w-full input bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
@@ -126,7 +126,7 @@ defmodule GearflowWeb.RequestLive.Form do
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   When do you need this by? (optional)
                 </label>
-                <.input field={@form[:needed_by]} type="date" class="text-base" />
+                <.input field={@form[:needed_by]} type="date" class="text-base w-full input bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500" />
               </div>
             </div>
           </div>
