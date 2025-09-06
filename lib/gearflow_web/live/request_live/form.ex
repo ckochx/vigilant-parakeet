@@ -126,23 +126,62 @@ defmodule GearflowWeb.RequestLive.Form do
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   When do you need this by? (optional)
                 </label>
-                <.input field={@form[:needed_by]} type="date" class="text-base w-full input bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500" />
+                <.input 
+                  field={@form[:needed_by]} 
+                  type="date" 
+                  class="text-base w-full input bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500" 
+                />
               </div>
             </div>
           </div>
 
           <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Photos</h3>
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Photos & Videos</h3>
+            <div 
+              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+              phx-drop-target={@uploads.attachments.ref}
+            >
               <div class="text-4xl mb-2">📸</div>
-              <p class="text-sm text-gray-600 mb-4">Take photos to help explain the issue</p>
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 touch-manipulation"
+              <p class="text-sm text-gray-600 mb-4">Take photos or videos to help explain the issue</p>
+              <label 
+                for={@uploads.attachments.ref}
+                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer touch-manipulation"
               >
-                <.icon name="hero-camera" class="w-5 h-5 mr-2" /> Add Photos
-              </button>
+                <.icon name="hero-camera" class="w-5 h-5 mr-2" />
+                Add Photos & Videos
+                <.live_file_input upload={@uploads.attachments} class="hidden" />
+              </label>
             </div>
+            
+            <%= for entry <- @uploads.attachments.entries do %>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-3">
+                <div class="flex items-center space-x-3">
+                  <%= if String.contains?(entry.client_type, "video") do %>
+                    <.icon name="hero-video-camera" class="w-5 h-5 text-blue-500" />
+                  <% else %>
+                    <.icon name="hero-photo" class="w-5 h-5 text-green-500" />
+                  <% end %>
+                  <span class="text-sm font-medium text-gray-700"><%= entry.client_name %></span>
+                  <span class="text-xs text-gray-500">(<%= format_bytes(entry.client_size) %>)</span>
+                </div>
+                <button 
+                  type="button" 
+                  phx-click="cancel-upload" 
+                  phx-value-ref={entry.ref}
+                  class="text-red-600 hover:text-red-800 p-1"
+                >
+                  <.icon name="hero-x-mark" class="w-4 h-4" />
+                </button>
+              </div>
+              
+              <%= for err <- upload_errors(@uploads.attachments, entry) do %>
+                <p class="text-red-600 text-sm mt-1"><%= error_to_string(err) %></p>
+              <% end %>
+            <% end %>
+            
+            <%= for err <- upload_errors(@uploads.attachments) do %>
+              <p class="text-red-600 text-sm mt-2"><%= error_to_string(err) %></p>
+            <% end %>
           </div>
 
           <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-4">
@@ -176,6 +215,10 @@ defmodule GearflowWeb.RequestLive.Form do
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
+     |> allow_upload(:attachments, 
+         accept: ~w(.jpg .jpeg .png .gif .mp4 .mov .avi .webm),
+         max_entries: 5,
+         max_file_size: 20_000_000)
      |> apply_action(socket.assigns.live_action, params)}
   end
 
@@ -206,8 +249,22 @@ defmodule GearflowWeb.RequestLive.Form do
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
+  def handle_event("cancel-upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :attachments, ref)}
+  end
+
   def handle_event("save", %{"request" => request_params}, socket) do
-    save_request(socket, socket.assigns.live_action, request_params)
+    # Process uploaded files
+    uploaded_files = consume_uploaded_entries(socket, :attachments, fn %{path: path}, entry ->
+      dest = Path.join(["priv", "static", "uploads", "#{entry.uuid}-#{entry.client_name}"])
+      File.cp!(path, dest)
+      {:ok, "/uploads/#{entry.uuid}-#{entry.client_name}"}
+    end)
+
+    # Add uploaded file paths to request params
+    request_params_with_files = Map.put(request_params, "attachments", uploaded_files)
+    
+    save_request(socket, socket.assigns.live_action, request_params_with_files)
   end
 
   defp save_request(socket, :edit, request_params) do
@@ -238,4 +295,13 @@ defmodule GearflowWeb.RequestLive.Form do
 
   defp return_path("index", _request), do: ~p"/requests"
   defp return_path("show", request), do: ~p"/requests/#{request}"
+
+  defp format_bytes(bytes) when bytes < 1024, do: "#{bytes} B"
+  defp format_bytes(bytes) when bytes < 1_048_576, do: "#{Float.round(bytes / 1024, 1)} KB" 
+  defp format_bytes(bytes), do: "#{Float.round(bytes / 1_048_576, 1)} MB"
+
+  defp error_to_string(:too_large), do: "File too large (max 20MB)"
+  defp error_to_string(:not_accepted), do: "File type not accepted" 
+  defp error_to_string(:too_many_files), do: "Too many files (max 5)"
+  defp error_to_string(err), do: "Upload error: #{inspect(err)}"
 end

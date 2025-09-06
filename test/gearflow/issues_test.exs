@@ -124,5 +124,29 @@ defmodule Gearflow.IssuesTest do
       assert "High priority" in descriptions
       assert "Medium priority" in descriptions
     end
+
+    test "create_request/1 with attachments" do
+      attrs = %{
+        priority: "urgent",
+        description: "Machine breakdown with photo evidence",
+        attachments: ["/uploads/equipment_damage.jpg", "/uploads/hydraulic_leak.mp4"],
+        equipment_id: "CAT 320D"
+      }
+
+      assert {:ok, %Request{} = request} = Issues.create_request(attrs)
+      assert request.attachments == ["/uploads/equipment_damage.jpg", "/uploads/hydraulic_leak.mp4"]
+      assert length(request.attachments) == 2
+    end
+
+    test "update_request/2 can add attachments" do
+      request = request_fixture(%{attachments: []})
+      
+      update_attrs = %{
+        attachments: ["/uploads/new_photo.jpg"]
+      }
+
+      assert {:ok, %Request{} = updated_request} = Issues.update_request(request, update_attrs)
+      assert updated_request.attachments == ["/uploads/new_photo.jpg"]
+    end
   end
 end

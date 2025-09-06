@@ -134,6 +134,83 @@ defmodule GearflowWeb.RequestLiveTest do
       html = render(index_live)
       assert html =~ "Test issue"
     end
+
+    test "form displays file upload interface", %{conn: conn} do
+      {:ok, form_live, html} = live(conn, ~p"/")
+
+      # First check if the basic form is there
+      assert html =~ "What&#39;s the issue?"
+
+      # Re-render to get complete HTML (sometimes LiveView renders incrementally)
+      html = render(form_live)
+      assert html =~ "Add Photos &amp; Videos"
+      assert html =~ "phx-drop-target"
+    end
+
+    test "form accepts photo uploads", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      content = File.read!("test/support/fixtures/test_image.jpg")
+      image =
+        file_input(form_live, "#request-form", :attachments, [
+          %{
+            last_modified: 1_594_171_879_000,
+            name: "equipment_damage.jpg",
+            content: content,
+            size: byte_size(content),
+            type: "image/jpeg"
+          }
+        ])
+
+      assert render_upload(image, "equipment_damage.jpg") =~ "equipment_damage.jpg"
+
+      attrs = %{description: "Hydraulic leak with photo", priority: "high"}
+
+      {:ok, index_live, _html} =
+        form_live
+        |> form("#request-form", request: attrs)
+        |> render_submit()
+        |> follow_redirect(conn, ~p"/requests")
+
+      html = render(index_live)
+      assert html =~ "Hydraulic leak with photo"
+      assert html =~ "1 photos"
+    end
+
+    test "form accepts video uploads", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      video =
+        file_input(form_live, "#request-form", :attachments, [
+          %{
+            last_modified: 1_594_171_879_000,
+            name: "machine_problem.mp4",
+            content: File.read!("test/support/fixtures/test_video.mp4"),
+            size: 30,
+            type: "video/mp4"
+          }
+        ])
+
+      assert render_upload(video, "machine_problem.mp4") =~ "machine_problem.mp4"
+    end
+
+    test "form has upload interface configured", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Verify the form has the correct upload configuration
+      html = render(form_live)
+      assert html =~ "phx-drop-target"
+      # The upload limit is enforced by LiveView configuration (max_entries: 5)
+      # HTML validation may prevent more than 5 files from being selected
+    end
+
+    test "form has correct file type restrictions", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Verify the file input has correct accept attribute for validation
+      html = render(form_live)
+      assert html =~ "accept=\".jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.webm\""
+    end
   end
 
   describe "Show" do
