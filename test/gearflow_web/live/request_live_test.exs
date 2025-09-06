@@ -434,6 +434,70 @@ defmodule GearflowWeb.RequestLiveTest do
       # Should show the request was created
       assert html =~ "1 photos"
     end
+
+    test "shows recording indicator when voice recording starts", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Start voice recording
+      html =
+        form_live
+        |> element("button[phx-click='start-voice-recording']")
+        |> render_click()
+
+      # Should show recording indicator
+      assert html =~ "Recording..."
+      assert html =~ "Stop Recording"
+      # Original button should be hidden or changed
+      refute html =~ "Record voice memo"
+    end
+
+    test "shows stop recording button during recording", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Start voice recording  
+      form_live
+      |> element("button[phx-click='start-voice-recording']")
+      |> render_click()
+
+      html = render(form_live)
+
+      # Should have stop recording button
+      assert html =~ "phx-click=\"stop-voice-recording\""
+      assert html =~ "🛑"
+    end
+
+    test "hides recording indicator when recording stops", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Start recording
+      form_live
+      |> element("button[phx-click='start-voice-recording']")
+      |> render_click()
+
+      # Stop recording
+      html =
+        form_live
+        |> element("button[phx-click='stop-voice-recording']")
+        |> render_click()
+
+      # Should hide recording indicator and show original button
+      refute html =~ "Recording..."
+      refute html =~ "Stop Recording"
+      assert html =~ "Record voice memo"
+    end
+
+    test "shows recording duration indicator", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/")
+
+      # Start voice recording
+      html =
+        form_live
+        |> element("button[phx-click='start-voice-recording']")
+        |> render_click()
+
+      # Should show some kind of duration indicator
+      assert html =~ "00:00"
+    end
   end
 
   describe "Show" do
