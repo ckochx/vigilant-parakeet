@@ -17,16 +17,10 @@ defmodule GearflowWeb.Router do
   scope "/", GearflowWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-  end
-
-  scope "/requests/", GearflowWeb do
-    pipe_through :browser
-
-    live "/", RequestLive.Index, :index
-    live "/new", RequestLive.Form, :new
-    live "/:id", RequestLive.Show, :show
-    live "/:id/edit", RequestLive.Form, :edit
+    live "/", RequestLive.Form, :new
+    live "/requests", RequestLive.Index, :index
+    live "/requests/:id", RequestLive.Show, :show
+    live "/requests/:id/edit", RequestLive.Form, :edit
   end
 
   # Other scopes may use custom stacks.

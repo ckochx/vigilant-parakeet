@@ -7,31 +7,167 @@ defmodule GearflowWeb.RequestLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        {@page_title}
-        <:subtitle>Use this form to manage request records in your database.</:subtitle>
-      </.header>
+    <div class="min-h-screen bg-gray-50 px-4 py-6">
+      <div class="max-w-lg mx-auto">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="text-xl font-bold text-gray-900">{@page_title}</h1>
+            <.link navigate={~p"/requests"} class="text-blue-600 text-sm font-medium">
+              ← Back to Dashboard
+            </.link>
+          </div>
+        </div>
 
-      <.form for={@form} id="request-form" phx-change="validate" phx-submit="save">
-        <.input field={@form[:description]} type="textarea" label="Description" />
-        <.input field={@form[:priority]} type="text" label="Priority" />
-        <.input field={@form[:status]} type="text" label="Status" />
-        <.input
-          field={@form[:attachments]}
-          type="select"
-          multiple
-          label="Attachments"
-          options={[{"Option 1", "option1"}, {"Option 2", "option2"}]}
-        />
-        <.input field={@form[:needed_by]} type="date" label="Needed by" />
-        <.input field={@form[:equipment_id]} type="text" label="Equipment" />
-        <footer>
-          <.button phx-disable-with="Saving..." variant="primary">Save Request</.button>
-          <.button navigate={return_path(@return_to, @request)}>Cancel</.button>
-        </footer>
-      </.form>
-    </Layouts.app>
+        <.form for={@form} id="request-form" phx-change="validate" phx-submit="save" class="space-y-6">
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">What's the issue?</h2>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Describe the problem or request
+                </label>
+                <.input
+                  field={@form[:description]}
+                  type="textarea"
+                  placeholder="Example: Final drive failure on digger unit 21784"
+                  class="text-base min-h-[120px]"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                  How urgent is this?
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="relative">
+                    <input
+                      type="radio"
+                      name={@form[:priority].name}
+                      value="urgent"
+                      checked={@form[:priority].value == "urgent"}
+                      class="sr-only peer"
+                    />
+                    <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-red-500 peer-checked:bg-red-50 cursor-pointer touch-manipulation">
+                      <div class="text-center">
+                        <div class="text-2xl mb-1">🚨</div>
+                        <div class="text-sm font-medium text-gray-900">URGENT</div>
+                        <div class="text-xs text-gray-500">Machine down</div>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label class="relative">
+                    <input
+                      type="radio"
+                      name={@form[:priority].name}
+                      value="high"
+                      checked={@form[:priority].value == "high"}
+                      class="sr-only peer"
+                    />
+                    <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 cursor-pointer touch-manipulation">
+                      <div class="text-center">
+                        <div class="text-2xl mb-1">⚠️</div>
+                        <div class="text-sm font-medium text-gray-900">HIGH</div>
+                        <div class="text-xs text-gray-500">Soon</div>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label class="relative">
+                    <input
+                      type="radio"
+                      name={@form[:priority].name}
+                      value="medium"
+                      checked={@form[:priority].value == "medium" || is_nil(@form[:priority].value)}
+                      class="sr-only peer"
+                    />
+                    <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-yellow-500 peer-checked:bg-yellow-50 cursor-pointer touch-manipulation">
+                      <div class="text-center">
+                        <div class="text-2xl mb-1">⏰</div>
+                        <div class="text-sm font-medium text-gray-900">NORMAL</div>
+                        <div class="text-xs text-gray-500">This week</div>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label class="relative">
+                    <input
+                      type="radio"
+                      name={@form[:priority].name}
+                      value="low"
+                      checked={@form[:priority].value == "low"}
+                      class="sr-only peer"
+                    />
+                    <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-green-500 peer-checked:bg-green-50 cursor-pointer touch-manipulation">
+                      <div class="text-center">
+                        <div class="text-2xl mb-1">📋</div>
+                        <div class="text-sm font-medium text-gray-900">LOW</div>
+                        <div class="text-xs text-gray-500">When convenient</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Equipment/Unit Number (if applicable)
+                </label>
+                <.input
+                  field={@form[:equipment_id]}
+                  type="text"
+                  placeholder="e.g. CAT D7, Unit 21784"
+                  class="text-base"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  When do you need this by? (optional)
+                </label>
+                <.input field={@form[:needed_by]} type="date" class="text-base" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Photos</h3>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <div class="text-4xl mb-2">📸</div>
+              <p class="text-sm text-gray-600 mb-4">Take photos to help explain the issue</p>
+              <button
+                type="button"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 touch-manipulation"
+              >
+                <.icon name="hero-camera" class="w-5 h-5 mr-2" /> Add Photos
+              </button>
+            </div>
+          </div>
+
+          <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-4">
+            <div class="flex gap-3">
+              <.button
+                type="submit"
+                phx-disable-with="Submitting..."
+                class="flex-1 py-4 text-lg font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 touch-manipulation"
+              >
+                Submit Request
+              </.button>
+              <.button
+                type="button"
+                navigate={return_path(@return_to, @request)}
+                class="px-6 py-4 text-lg font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 touch-manipulation"
+              >
+                Cancel
+              </.button>
+            </div>
+          </div>
+
+          <input type="hidden" name={@form[:status].name} value="pending" />
+        </.form>
+      </div>
+    </div>
     """
   end
 
