@@ -11,12 +11,12 @@ defmodule Gearflow.IssuesFixtures do
     {:ok, request} =
       attrs
       |> Enum.into(%{
-        attachments: ["option1", "option2"],
-        description: "some description",
-        equipment_id: "some equipment_id",
-        needed_by: ~D[2025-09-05],
-        priority: "some priority",
-        status: "some status"
+        attachments: [],
+        description: "Final drive failure on excavator unit 12345",
+        equipment_id: "CAT 320D 12345",
+        needed_by: ~D[2025-09-12],
+        priority: "medium",
+        status: "pending"
       })
       |> Gearflow.Issues.create_request()
 

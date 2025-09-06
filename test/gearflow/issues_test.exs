@@ -8,7 +8,7 @@ defmodule Gearflow.IssuesTest do
 
     import Gearflow.IssuesFixtures
 
-    @invalid_attrs %{priority: nil, status: nil, description: nil, attachments: nil, needed_by: nil, equipment_id: nil}
+    @invalid_attrs %{priority: "medium", description: "", equipment_id: "", needed_by: nil}
 
     test "list_requests/0 returns all requests" do
       request = request_fixture()
@@ -21,15 +21,22 @@ defmodule Gearflow.IssuesTest do
     end
 
     test "create_request/1 with valid data creates a request" do
-      valid_attrs = %{priority: "some priority", status: "some status", description: "some description", attachments: ["option1", "option2"], needed_by: ~D[2025-09-05], equipment_id: "some equipment_id"}
+      valid_attrs = %{
+        priority: "urgent",
+        status: "pending",
+        description: "Hydraulic pump failure on dozer unit 5521",
+        attachments: [],
+        needed_by: ~D[2025-09-08],
+        equipment_id: "CAT D6T 5521"
+      }
 
       assert {:ok, %Request{} = request} = Issues.create_request(valid_attrs)
-      assert request.priority == "some priority"
-      assert request.status == "some status"
-      assert request.description == "some description"
-      assert request.attachments == ["option1", "option2"]
-      assert request.needed_by == ~D[2025-09-05]
-      assert request.equipment_id == "some equipment_id"
+      assert request.priority == "urgent"
+      assert request.status == "pending"
+      assert request.description == "Hydraulic pump failure on dozer unit 5521"
+      assert request.attachments == []
+      assert request.needed_by == ~D[2025-09-08]
+      assert request.equipment_id == "CAT D6T 5521"
     end
 
     test "create_request/1 with invalid data returns error changeset" do
@@ -38,15 +45,23 @@ defmodule Gearflow.IssuesTest do
 
     test "update_request/2 with valid data updates the request" do
       request = request_fixture()
-      update_attrs = %{priority: "some updated priority", status: "some updated status", description: "some updated description", attachments: ["option1"], needed_by: ~D[2025-09-06], equipment_id: "some updated equipment_id"}
+
+      update_attrs = %{
+        priority: "high",
+        status: "in_progress",
+        description: "Need replacement tracks for excavator",
+        attachments: [],
+        needed_by: ~D[2025-09-15],
+        equipment_id: "CAT 320D"
+      }
 
       assert {:ok, %Request{} = request} = Issues.update_request(request, update_attrs)
-      assert request.priority == "some updated priority"
-      assert request.status == "some updated status"
-      assert request.description == "some updated description"
-      assert request.attachments == ["option1"]
-      assert request.needed_by == ~D[2025-09-06]
-      assert request.equipment_id == "some updated equipment_id"
+      assert request.priority == "high"
+      assert request.status == "in_progress"
+      assert request.description == "Need replacement tracks for excavator"
+      assert request.attachments == []
+      assert request.needed_by == ~D[2025-09-15]
+      assert request.equipment_id == "CAT 320D"
     end
 
     test "update_request/2 with invalid data returns error changeset" do
@@ -64,6 +79,50 @@ defmodule Gearflow.IssuesTest do
     test "change_request/1 returns a request changeset" do
       request = request_fixture()
       assert %Ecto.Changeset{} = Issues.change_request(request)
+    end
+
+    test "create_request/1 with construction-specific data" do
+      attrs = %{
+        priority: "urgent",
+        status: "pending",
+        description: "I have a final drive failure on a digger unit 21784",
+        equipment_id: "digger unit 21784",
+        needed_by: ~D[2025-09-07]
+      }
+
+      assert {:ok, %Request{} = request} = Issues.create_request(attrs)
+      assert request.priority == "urgent"
+      assert request.description == "I have a final drive failure on a digger unit 21784"
+      assert request.equipment_id == "digger unit 21784"
+    end
+
+    test "create_request/1 with dozer request data" do
+      attrs = %{
+        priority: "high",
+        status: "pending",
+        description: "I need a CAT D7 Dozer by next Monday",
+        equipment_id: "CAT D7",
+        needed_by: ~D[2025-09-09]
+      }
+
+      assert {:ok, %Request{} = request} = Issues.create_request(attrs)
+      assert request.description == "I need a CAT D7 Dozer by next Monday"
+      assert request.equipment_id == "CAT D7"
+      assert request.priority == "high"
+    end
+
+    test "list_requests/0 returns multiple requests with different priorities" do
+      _urgent = request_fixture(%{priority: "urgent", description: "Urgent issue"})
+      _high = request_fixture(%{priority: "high", description: "High priority"})
+      _medium = request_fixture(%{priority: "medium", description: "Medium priority"})
+
+      requests = Issues.list_requests()
+
+      assert length(requests) == 3
+      descriptions = Enum.map(requests, & &1.description)
+      assert "Urgent issue" in descriptions
+      assert "High priority" in descriptions
+      assert "Medium priority" in descriptions
     end
   end
 end

@@ -1,8 +1,10 @@
 defmodule GearflowWeb.PageControllerTest do
   use GearflowWeb.ConnCase
+  import Phoenix.LiveViewTest
 
-  test "GET /", %{conn: conn} do
-    conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
+  test "GET / shows request form", %{conn: conn} do
+    {:ok, _live, html} = live(conn, ~p"/")
+    assert html =~ "New Request"
+    assert html =~ "What&#39;s the issue?"
   end
 end
