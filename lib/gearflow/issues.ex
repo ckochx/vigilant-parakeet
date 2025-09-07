@@ -20,7 +20,7 @@ defmodule Gearflow.Issues do
   def list_requests do
     # Priority order mapping for sorting (lower number = higher priority)
     priority_order = %{"urgent" => 1, "high" => 2, "medium" => 3, "low" => 4}
-    
+
     Request
     |> Repo.all()
     |> Enum.sort_by(fn request ->

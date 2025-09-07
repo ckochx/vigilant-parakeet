@@ -10,7 +10,10 @@ defmodule GearflowWeb.RequestLive.Form do
     <div class="min-h-screen bg-gray-50 px-4 py-6">
       <div id="flash-messages" aria-live="polite" class="mb-4">
         <%= if Phoenix.Flash.get(@flash, :info) do %>
-          <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4" role="alert">
+          <div
+            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4"
+            role="alert"
+          >
             <div class="flex">
               <.icon name="hero-check-circle" class="w-5 h-5 mr-2 mt-0.5" />
               <span>{Phoenix.Flash.get(@flash, :info)}</span>
@@ -18,7 +21,10 @@ defmodule GearflowWeb.RequestLive.Form do
           </div>
         <% end %>
         <%= if Phoenix.Flash.get(@flash, :error) do %>
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4" role="alert">
+          <div
+            class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4"
+            role="alert"
+          >
             <div class="flex">
               <.icon name="hero-exclamation-circle" class="w-5 h-5 mr-2 mt-0.5" />
               <span>{Phoenix.Flash.get(@flash, :error)}</span>
@@ -168,7 +174,7 @@ defmodule GearflowWeb.RequestLive.Form do
               </div>
 
               <div>
-                <label 
+                <label
                   for="request_needed_by"
                   class="block text-sm font-medium text-gray-700 mb-2 cursor-pointer"
                 >
@@ -180,7 +186,7 @@ defmodule GearflowWeb.RequestLive.Form do
                     type="date"
                     class="text-base w-full input bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   />
-                  <div 
+                  <div
                     class="absolute inset-0 cursor-pointer"
                     onclick="document.getElementById('request_needed_by').showPicker()"
                   >
@@ -309,7 +315,6 @@ defmodule GearflowWeb.RequestLive.Form do
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
     {:noreply, cancel_upload(socket, :attachments, ref)}
   end
-
 
   def handle_event("speech-result", %{"text" => text}, socket) do
     # Update the form with the speech recognition result

@@ -10,7 +10,7 @@ defmodule Gearflow.IssuesFixtures do
   def request_fixture(attrs \\ %{}) do
     # Extract inserted_at if provided for direct database insertion
     {inserted_at, attrs} = Map.pop(attrs, :inserted_at)
-    
+
     {:ok, request} =
       attrs
       |> Enum.into(%{
@@ -25,7 +25,9 @@ defmodule Gearflow.IssuesFixtures do
 
     # If inserted_at was provided, update the record directly in the database
     if inserted_at do
-      changeset = Ecto.Changeset.change(request, inserted_at: inserted_at, updated_at: inserted_at)
+      changeset =
+        Ecto.Changeset.change(request, inserted_at: inserted_at, updated_at: inserted_at)
+
       {:ok, request} = Gearflow.Repo.update(changeset)
       request
     else
