@@ -150,14 +150,24 @@ defmodule GearflowWeb.RequestLive.Form do
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label 
+                  for="request_needed_by"
+                  class="block text-sm font-medium text-gray-700 mb-2 cursor-pointer"
+                >
                   When do you need this by? (optional)
                 </label>
-                <.input
-                  field={@form[:needed_by]}
-                  type="date"
-                  class="text-base w-full input bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                />
+                <div class="relative">
+                  <.input
+                    field={@form[:needed_by]}
+                    type="date"
+                    class="text-base w-full input bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <div 
+                    class="absolute inset-0 cursor-pointer"
+                    onclick="document.getElementById('request_needed_by').showPicker()"
+                  >
+                  </div>
+                </div>
               </div>
             </div>
           </div>
