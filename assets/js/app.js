@@ -31,6 +31,7 @@ const SpeechRecognition = {
     this.recognition = null
     this.mediaRecorder = null
     this.audioChunks = []
+    this.isRecording = false
 
     // Handle speech recognition events from server
     this.handleEvent("start-speech-recognition", () => {
@@ -39,8 +40,17 @@ const SpeechRecognition = {
 
     // Handle voice recording events from server
     this.handleEvent("start-voice-recording", () => {
-      this.startVoiceRecording()
+      this.toggleVoiceRecording()
     })
+
+    // Add click handler for the voice recording button
+    this.voiceButton = this.el.querySelector('[phx-click="start-voice-recording"]')
+    if (this.voiceButton) {
+      this.voiceButton.addEventListener('click', (e) => {
+        e.preventDefault()
+        this.toggleVoiceRecording()
+      })
+    }
   },
 
   startSpeechRecognition() {
@@ -79,6 +89,14 @@ const SpeechRecognition = {
     this.recognition.start()
   },
 
+  toggleVoiceRecording() {
+    if (this.isRecording) {
+      this.stopVoiceRecording()
+    } else {
+      this.startVoiceRecording()
+    }
+  },
+
   startVoiceRecording() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert('Voice recording not supported in this browser')
@@ -86,8 +104,6 @@ const SpeechRecognition = {
     }
 
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-      // Stop recording if already recording
-      this.stopVoiceRecording()
       return
     }
 
@@ -95,6 +111,8 @@ const SpeechRecognition = {
       .then(stream => {
         this.mediaRecorder = new MediaRecorder(stream)
         this.audioChunks = []
+        this.isRecording = true
+        this.updateRecordingUI()
 
         this.mediaRecorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
@@ -106,6 +124,8 @@ const SpeechRecognition = {
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
           this.handleAudioBlob(audioBlob)
           stream.getTracks().forEach(track => track.stop())
+          this.isRecording = false
+          this.updateRecordingUI()
         }
 
         this.mediaRecorder.start()
@@ -121,6 +141,8 @@ const SpeechRecognition = {
       .catch(error => {
         console.error('Error accessing microphone:', error)
         alert('Could not access microphone')
+        this.isRecording = false
+        this.updateRecordingUI()
       })
   },
 
@@ -128,6 +150,20 @@ const SpeechRecognition = {
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       this.mediaRecorder.stop()
       console.log('Voice recording stopped')
+    }
+  },
+
+  updateRecordingUI() {
+    if (this.voiceButton) {
+      if (this.isRecording) {
+        this.voiceButton.innerHTML = '⏹️ Stop recording'
+        this.voiceButton.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200')
+        this.voiceButton.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600', 'animate-pulse')
+      } else {
+        this.voiceButton.innerHTML = '🎙️ Record voice memo'
+        this.voiceButton.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600', 'animate-pulse')
+        this.voiceButton.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200')
+      }
     }
   },
 
@@ -147,6 +183,7 @@ const SpeechRecognition = {
       fileInput.dispatchEvent(new Event('change', { bubbles: true }))
     }
   },
+
 
   destroyed() {
     if (this.recognition) {
