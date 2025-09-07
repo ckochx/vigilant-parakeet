@@ -31,26 +31,26 @@ defmodule GearflowWeb.RequestLive.Form do
 
             <div class="space-y-4">
               <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label class="block text-sm font-medium text-gray-700">
+                <div class="mb-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
                     Describe the problem or request
                   </label>
-                  <div class="flex gap-2">
+                  <div class="flex flex-col sm:flex-row gap-3 mb-3">
                     <button
                       type="button"
                       phx-click="start-speech-recognition"
-                      class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 touch-manipulation"
+                      class="flex-1 sm:flex-none px-4 py-3 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 touch-manipulation"
                       title="Speech to text"
                     >
-                      🎤 Speech
+                      🎤 Speech to Text
                     </button>
                     <button
                       type="button"
                       phx-click="start-voice-recording"
-                      class="inline-flex items-center px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 touch-manipulation"
+                      class="flex-1 sm:flex-none px-4 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 touch-manipulation"
                       title="Record voice memo"
                     >
-                      🎙️ Record voice memo
+                      🎙️ Record Voice Memo
                     </button>
                   </div>
                 </div>

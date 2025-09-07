@@ -156,11 +156,11 @@ const SpeechRecognition = {
   updateRecordingUI() {
     if (this.voiceButton) {
       if (this.isRecording) {
-        this.voiceButton.innerHTML = '⏹️ Stop recording'
+        this.voiceButton.innerHTML = '⏹️ Stop Recording'
         this.voiceButton.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200')
         this.voiceButton.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600', 'animate-pulse')
       } else {
-        this.voiceButton.innerHTML = '🎙️ Record voice memo'
+        this.voiceButton.innerHTML = '🎙️ Record Voice Memo'
         this.voiceButton.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600', 'animate-pulse')
         this.voiceButton.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200')
       }
