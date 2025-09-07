@@ -21,6 +21,9 @@ defmodule GearflowWeb.Router do
     live "/requests", RequestLive.Index, :index
     live "/requests/:id", RequestLive.Show, :show
     live "/requests/:id/edit", RequestLive.Form, :edit
+
+    live "/triage", TriageLive.Index, :index
+    live "/triage/:id/edit", TriageLive.Edit, :edit
   end
 
   # Other scopes may use custom stacks.
