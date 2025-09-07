@@ -35,6 +35,76 @@ defmodule GearflowWeb.RequestLiveTest do
       assert html =~ "Submit New Request"
     end
 
+    test "sorts requests by urgency first, then by newest date", %{conn: conn} do
+      # Create requests with different priorities and dates
+      _urgent_old = request_fixture(%{
+        description: "Urgent old request", 
+        priority: "urgent", 
+        inserted_at: ~U[2025-01-01 10:00:00Z]
+      })
+      
+      _medium_new = request_fixture(%{
+        description: "Medium new request", 
+        priority: "medium", 
+        inserted_at: ~U[2025-01-03 10:00:00Z]
+      })
+      
+      _urgent_new = request_fixture(%{
+        description: "Urgent new request", 
+        priority: "urgent", 
+        inserted_at: ~U[2025-01-02 10:00:00Z]
+      })
+      
+      _high_old = request_fixture(%{
+        description: "High old request", 
+        priority: "high", 
+        inserted_at: ~U[2025-01-01 11:00:00Z]
+      })
+
+      {:ok, _index_live, html} = live(conn, ~p"/requests")
+
+      # Extract the order of descriptions in the HTML
+      descriptions = Regex.scan(~r/(Urgent new|Urgent old|High old|Medium new) request/, html)
+                   |> Enum.map(fn [_, desc] -> desc end)
+
+      # Should be sorted by priority first (urgent, high, medium, low), then by newest date within same priority
+      expected_order = ["Urgent new", "Urgent old", "High old", "Medium new"]
+      
+      assert descriptions == expected_order
+    end
+
+    test "sorts multiple requests of same priority by newest date first", %{conn: conn} do
+      # Create multiple urgent requests with different dates
+      _urgent_oldest = request_fixture(%{
+        description: "Urgent oldest", 
+        priority: "urgent",
+        inserted_at: ~U[2025-01-01 10:00:00Z]
+      })
+      
+      _urgent_newest = request_fixture(%{
+        description: "Urgent newest", 
+        priority: "urgent",
+        inserted_at: ~U[2025-01-03 10:00:00Z]
+      })
+      
+      _urgent_middle = request_fixture(%{
+        description: "Urgent middle", 
+        priority: "urgent",
+        inserted_at: ~U[2025-01-02 10:00:00Z]
+      })
+
+      {:ok, _index_live, html} = live(conn, ~p"/requests")
+
+      # Extract the order of urgent descriptions
+      descriptions = Regex.scan(~r/(Urgent newest|Urgent middle|Urgent oldest)/, html)
+                   |> Enum.map(fn [_, desc] -> desc end)
+
+      # Should be sorted newest first within same priority
+      expected_order = ["Urgent newest", "Urgent middle", "Urgent oldest"]
+      
+      assert descriptions == expected_order
+    end
+
     test "saves new request via mobile form", %{conn: conn} do
       {:ok, form_live, _html} = live(conn, ~p"/")
 

@@ -18,7 +18,16 @@ defmodule Gearflow.Issues do
 
   """
   def list_requests do
-    Repo.all(Request)
+    # Priority order mapping for sorting (lower number = higher priority)
+    priority_order = %{"urgent" => 1, "high" => 2, "medium" => 3, "low" => 4}
+    
+    Request
+    |> Repo.all()
+    |> Enum.sort_by(fn request ->
+      priority_value = Map.get(priority_order, request.priority, 5)
+      # Sort by priority first (lower number first), then by inserted_at descending (newest first)
+      {priority_value, -DateTime.to_unix(request.inserted_at, :microsecond)}
+    end)
   end
 
   @doc """

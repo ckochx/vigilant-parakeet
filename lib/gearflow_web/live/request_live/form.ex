@@ -8,6 +8,24 @@ defmodule GearflowWeb.RequestLive.Form do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-gray-50 px-4 py-6">
+      <div id="flash-messages" aria-live="polite" class="mb-4">
+        <%= if Phoenix.Flash.get(@flash, :info) do %>
+          <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4" role="alert">
+            <div class="flex">
+              <.icon name="hero-check-circle" class="w-5 h-5 mr-2 mt-0.5" />
+              <span>{Phoenix.Flash.get(@flash, :info)}</span>
+            </div>
+          </div>
+        <% end %>
+        <%= if Phoenix.Flash.get(@flash, :error) do %>
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4" role="alert">
+            <div class="flex">
+              <.icon name="hero-exclamation-circle" class="w-5 h-5 mr-2 mt-0.5" />
+              <span>{Phoenix.Flash.get(@flash, :error)}</span>
+            </div>
+          </div>
+        <% end %>
+      </div>
       <div class="max-w-lg mx-auto">
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div class="flex items-center justify-between mb-4">
