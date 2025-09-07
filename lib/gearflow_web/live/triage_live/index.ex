@@ -76,85 +76,92 @@ defmodule GearflowWeb.TriageLive.Index do
         <div class="grid gap-4">
           <div
             :for={{_id, request} <- @streams.requests}
-            class="bg-white rounded-lg shadow-md border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
+            class="bg-white rounded-lg shadow-md border border-slate-200 hover:shadow-lg transition-all duration-200"
           >
-            <!-- Admin Header Row -->
-            <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
-              <div class="flex items-center gap-3">
-                <div class={[
-                  "w-3 h-3 rounded-full",
-                  request.priority == "urgent" && "bg-red-500 animate-pulse",
-                  request.priority == "high" && "bg-orange-500",
-                  request.priority == "medium" && "bg-yellow-500",
-                  request.priority == "low" && "bg-green-500"
-                ]}>
+            <!-- Clickable Card Content -->
+            <.link
+              navigate={~p"/triage/#{request}"}
+              class="block p-6 pb-4 hover:bg-slate-50 transition-colors"
+            >
+              <!-- Admin Header Row -->
+              <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class={[
+                    "w-3 h-3 rounded-full",
+                    request.priority == "urgent" && "bg-red-500 animate-pulse",
+                    request.priority == "high" && "bg-orange-500",
+                    request.priority == "medium" && "bg-yellow-500",
+                    request.priority == "low" && "bg-green-500"
+                  ]}>
+                  </div>
+                  <span class="text-sm font-mono text-slate-500">ID #{request.id}</span>
+                  <span class="text-xs text-slate-400">
+                    {Calendar.strftime(request.inserted_at, "%m/%d/%y %I:%M %p")}
+                  </span>
                 </div>
-                <span class="text-sm font-mono text-slate-500">ID #{request.id}</span>
-                <span class="text-xs text-slate-400">
-                  {Calendar.strftime(request.inserted_at, "%m/%d/%y %I:%M %p")}
-                </span>
+                <div class="text-sm text-slate-500">
+                  {if request.needed_by, do: "Due: #{request.needed_by}"}
+                </div>
               </div>
-              <div class="text-sm text-slate-500">
-                {if request.needed_by, do: "Due: #{request.needed_by}"}
+              <!-- Priority and Status Row -->
+              <div class="flex items-center gap-4 mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-medium text-slate-500">PRIORITY</span>
+                  <span class={[
+                    "px-2 py-1 text-xs font-bold rounded border",
+                    request.priority == "urgent" && "bg-red-50 text-red-700 border-red-200",
+                    request.priority == "high" && "bg-orange-50 text-orange-700 border-orange-200",
+                    request.priority == "medium" && "bg-yellow-50 text-yellow-700 border-yellow-200",
+                    request.priority == "low" && "bg-green-50 text-green-700 border-green-200"
+                  ]}>
+                    {String.upcase(request.priority || "MEDIUM")}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-medium text-slate-500">STATUS</span>
+                  <span class={[
+                    "px-2 py-1 text-xs font-bold rounded border",
+                    request.status == "pending" && "bg-slate-50 text-slate-700 border-slate-200",
+                    request.status == "in_progress" && "bg-blue-50 text-blue-700 border-blue-200",
+                    request.status == "completed" &&
+                      "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  ]}>
+                    {String.upcase(request.status || "PENDING")}
+                  </span>
+                </div>
               </div>
-            </div>
-            <!-- Priority and Status Row -->
-            <div class="flex items-center gap-4 mb-4">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-medium text-slate-500">PRIORITY</span>
-                <span class={[
-                  "px-2 py-1 text-xs font-bold rounded border",
-                  request.priority == "urgent" && "bg-red-50 text-red-700 border-red-200",
-                  request.priority == "high" && "bg-orange-50 text-orange-700 border-orange-200",
-                  request.priority == "medium" && "bg-yellow-50 text-yellow-700 border-yellow-200",
-                  request.priority == "low" && "bg-green-50 text-green-700 border-green-200"
-                ]}>
-                  {String.upcase(request.priority || "MEDIUM")}
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-medium text-slate-500">STATUS</span>
-                <span class={[
-                  "px-2 py-1 text-xs font-bold rounded border",
-                  request.status == "pending" && "bg-slate-50 text-slate-700 border-slate-200",
-                  request.status == "in_progress" && "bg-blue-50 text-blue-700 border-blue-200",
-                  request.status == "completed" && "bg-emerald-50 text-emerald-700 border-emerald-200"
-                ]}>
-                  {String.upcase(request.status || "PENDING")}
-                </span>
-              </div>
-            </div>
-            
+              
     <!-- Description -->
-            <div class="mb-4">
-              <h3 class="text-base font-medium text-slate-900 mb-2">Description</h3>
-              <p class="text-slate-700 bg-slate-50 p-3 rounded border text-sm leading-relaxed">
-                {request.description}
-              </p>
-            </div>
-            
+              <div class="mb-4">
+                <h3 class="text-base font-medium text-slate-900 mb-2">Description</h3>
+                <p class="text-slate-700 bg-slate-50 p-3 rounded border text-sm leading-relaxed">
+                  {request.description}
+                </p>
+              </div>
+              
     <!-- Metadata Grid -->
-            <div class="grid grid-cols-2 gap-4 mb-4 p-3 bg-slate-50 rounded border">
-              <div :if={request.equipment_id}>
-                <div class="text-xs font-medium text-slate-500 mb-1">EQUIPMENT</div>
-                <div class="flex items-center gap-2 text-sm text-slate-700">
-                  <.icon name="hero-wrench-screwdriver" class="w-4 h-4 text-slate-500" />
-                  {request.equipment_id}
+              <div class="grid grid-cols-2 gap-4 mb-4 p-3 bg-slate-50 rounded border">
+                <div :if={request.equipment_id}>
+                  <div class="text-xs font-medium text-slate-500 mb-1">EQUIPMENT</div>
+                  <div class="flex items-center gap-2 text-sm text-slate-700">
+                    <.icon name="hero-wrench-screwdriver" class="w-4 h-4 text-slate-500" />
+                    {request.equipment_id}
+                  </div>
+                </div>
+                <div :if={request.attachments && length(request.attachments) > 0}>
+                  <div class="text-xs font-medium text-slate-500 mb-1">ATTACHMENTS</div>
+                  <div class="flex items-center gap-2 text-sm text-slate-700">
+                    <.icon name="hero-camera" class="w-4 h-4 text-slate-500" />
+                    {length(request.attachments)} files
+                  </div>
                 </div>
               </div>
-              <div :if={request.attachments && length(request.attachments) > 0}>
-                <div class="text-xs font-medium text-slate-500 mb-1">ATTACHMENTS</div>
-                <div class="flex items-center gap-2 text-sm text-slate-700">
-                  <.icon name="hero-camera" class="w-4 h-4 text-slate-500" />
-                  {length(request.attachments)} files
-                </div>
-              </div>
-            </div>
+            </.link>
             
     <!-- Admin Actions -->
-            <div class="border-t border-slate-100 pt-4">
+            <div class="border-t border-slate-100 pt-4 pb-6 px-6">
               <div class="flex items-center justify-between mb-3">
-                <div class="text-xs font-medium text-slate-500 uppercase">Status Actions</div>
+                <div class="text-xs font-medium text-slate-500 uppercase">Change Status</div>
                 <div class="text-xs font-medium text-slate-500 uppercase">Management</div>
               </div>
 
@@ -166,38 +173,32 @@ defmodule GearflowWeb.TriageLive.Index do
                     phx-click="update_status"
                     phx-value-id={request.id}
                     phx-value-status="pending"
-                    class="px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded border hover:bg-slate-200 font-medium"
+                    class="px-3 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-700 font-medium shadow-sm transition-colors"
                   >
-                    Pending
+                    ← Pending
                   </button>
                   <button
                     :if={request.status != "in_progress"}
                     phx-click="update_status"
                     phx-value-id={request.id}
                     phx-value-status="in_progress"
-                    class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border hover:bg-blue-200 font-medium"
+                    class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow-sm transition-colors"
                   >
-                    In Progress
+                    🚀 Start
                   </button>
                   <button
                     :if={request.status != "completed"}
                     phx-click="update_status"
                     phx-value-id={request.id}
                     phx-value-status="completed"
-                    class="px-2 py-1 text-xs bg-emerald-100 text-emerald-700 rounded border hover:bg-emerald-200 font-medium"
+                    class="px-3 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 font-medium shadow-sm transition-colors"
                   >
-                    Complete
+                    ✅ Done
                   </button>
                 </div>
                 
     <!-- Management Buttons -->
                 <div class="flex gap-1">
-                  <.link
-                    navigate={~p"/requests/#{request}"}
-                    class="px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded border hover:bg-slate-200 font-medium"
-                  >
-                    View
-                  </.link>
                   <.link
                     navigate={~p"/triage/#{request}/edit"}
                     class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border hover:bg-blue-200 font-medium"

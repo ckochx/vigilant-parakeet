@@ -71,6 +71,146 @@ defmodule GearflowWeb.TriageLiveTest do
     end
   end
 
+  describe "Triage Show" do
+    test "displays request details in triage format", %{conn: conn} do
+      request =
+        request_fixture(%{
+          description: "Hydraulic system failure on excavator",
+          priority: "urgent",
+          status: "pending",
+          equipment_id: "CAT 320D 12345",
+          needed_by: ~D[2025-09-15],
+          attachments: ["/uploads/test-image.jpg"]
+        })
+
+      {:ok, _show_live, html} = live(conn, ~p"/triage/#{request}")
+
+      assert html =~ "Triage Review"
+      assert html =~ "Request ##{request.id}"
+      assert html =~ "Hydraulic system failure"
+      assert html =~ "URGENT"
+      assert html =~ "PENDING"
+      assert html =~ "CAT 320D 12345"
+      assert html =~ "September 15, 2025"
+      assert html =~ "1 attachment"
+    end
+
+    test "shows admin-specific styling and navigation", %{conn: conn} do
+      request = request_fixture(%{description: "Test admin styling"})
+
+      {:ok, _show_live, html} = live(conn, ~p"/triage/#{request}")
+
+      assert html =~ "Admin Dashboard"
+      assert html =~ "bg-slate-"
+      assert html =~ "← Back to Triage"
+      assert html =~ "Edit Request"
+    end
+
+    test "allows status updates directly from triage show", %{conn: conn} do
+      request = request_fixture(%{description: "Test status update", status: "pending"})
+
+      {:ok, show_live, _html} = live(conn, ~p"/triage/#{request}")
+
+      # Update status to in_progress
+      assert show_live
+             |> element("[phx-click='update_status'][phx-value-status='in_progress']")
+             |> render_click()
+
+      # Verify the status was updated
+      updated_html = render(show_live)
+      assert updated_html =~ "IN_PROGRESS"
+      assert updated_html =~ "Status updated"
+    end
+
+    test "allows priority updates directly from triage show", %{conn: conn} do
+      request = request_fixture(%{description: "Test priority update", priority: "medium"})
+
+      {:ok, show_live, _html} = live(conn, ~p"/triage/#{request}")
+
+      # Update priority to urgent
+      assert show_live
+             |> element("[phx-click='update_priority'][phx-value-priority='urgent']")
+             |> render_click()
+
+      # Verify the priority was updated
+      updated_html = render(show_live)
+      assert updated_html =~ "URGENT"
+      assert updated_html =~ "Priority updated"
+    end
+
+    test "shows attachment details with admin controls", %{conn: conn} do
+      request =
+        request_fixture(%{
+          description: "Test with attachments",
+          attachments: ["/uploads/image.jpg", "/uploads/video.mp4", "/uploads/voice_memo.webm"]
+        })
+
+      {:ok, _show_live, html} = live(conn, ~p"/triage/#{request}")
+
+      assert html =~ "3 attachments"
+      assert html =~ "Image"
+      assert html =~ "Video"
+      assert html =~ "Voice Memo"
+    end
+
+    test "provides quick action buttons for common triage tasks", %{conn: conn} do
+      request = request_fixture(%{description: "Test quick actions"})
+
+      {:ok, _show_live, html} = live(conn, ~p"/triage/#{request}")
+
+      assert html =~ "Mark Complete"
+      assert html =~ "Assign Priority"
+      assert html =~ "Add Notes"
+      assert html =~ "Edit Request"
+    end
+
+    test "navigates back to triage index", %{conn: conn} do
+      request = request_fixture(%{description: "Test navigation"})
+
+      {:ok, show_live, _html} = live(conn, ~p"/triage/#{request}")
+
+      assert {:ok, _index_live, html} =
+               show_live
+               |> element("a", "← Back to Triage")
+               |> render_click()
+               |> follow_redirect(conn, ~p"/triage")
+
+      assert html =~ "Issue Triage Dashboard"
+    end
+
+    test "displays images inline with toggle functionality", %{conn: conn} do
+      request =
+        request_fixture(%{
+          description: "Test with image attachments",
+          attachments: ["/uploads/image.jpg", "/uploads/photo.png", "/uploads/video.mp4"]
+        })
+
+      {:ok, show_live, html} = live(conn, ~p"/triage/#{request}")
+
+      # Should show image file names and toggle buttons
+      assert html =~ "image.jpg"
+      assert html =~ "photo.png"
+      assert html =~ "video.mp4"
+      # Toggle button for images
+      assert html =~ "Show"
+
+      # Initially images should be collapsed
+      refute html =~ "<img"
+
+      # Click to expand first image
+      assert show_live
+             |> element("[phx-click='toggle_image'][phx-value-index='0']")
+             |> render_click()
+
+      # Now should show the image
+      updated_html = render(show_live)
+      assert updated_html =~ "<img"
+      assert updated_html =~ "/uploads/image.jpg"
+      # Button should now show "Hide"
+      assert updated_html =~ "Hide"
+    end
+  end
+
   describe "Triage Edit" do
     test "displays edit form for request", %{conn: conn} do
       request = request_fixture(%{description: "Test edit", priority: "high", status: "pending"})

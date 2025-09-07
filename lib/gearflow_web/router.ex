@@ -23,6 +23,7 @@ defmodule GearflowWeb.Router do
     live "/requests/:id/edit", RequestLive.Form, :edit
 
     live "/triage", TriageLive.Index, :index
+    live "/triage/:id", TriageLive.Show, :show
     live "/triage/:id/edit", TriageLive.Edit, :edit
   end
 

@@ -348,7 +348,9 @@ defmodule GearflowWeb.RequestLiveTest do
       assert html =~ "phx-hook=\"SpeechRecognition\""
     end
 
-    test "speech recognition button has correct data attribute for client-side handling", %{conn: conn} do
+    test "speech recognition button has correct data attribute for client-side handling", %{
+      conn: conn
+    } do
       {:ok, form_live, _html} = live(conn, ~p"/")
 
       html = render(form_live)
@@ -358,7 +360,9 @@ defmodule GearflowWeb.RequestLiveTest do
       assert html =~ "🎤 Speech to Text"
     end
 
-    test "voice recording button has correct data attribute for client-side handling", %{conn: conn} do
+    test "voice recording button has correct data attribute for client-side handling", %{
+      conn: conn
+    } do
       {:ok, form_live, _html} = live(conn, ~p"/")
 
       # Should have the voice recording button with data attribute (client-side only, no server interaction)
@@ -366,7 +370,7 @@ defmodule GearflowWeb.RequestLiveTest do
       assert html =~ "data-voice-recording"
       assert html =~ "🎙️"
       assert html =~ "Record Voice Memo"
-      
+
       # Verify the button exists with the correct data attribute
       assert html =~ "button"
       assert html =~ "data-voice-recording"
