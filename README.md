@@ -6,22 +6,31 @@ It uses LiveView and some vanilla JS to present a form for a ticketing system. I
 
 The form submits to an intake screen (the Index).
 
+Attachments (images, videos, voice notes) are stored locally to disc.
+
 Supports text, voice memos, and speech-to-text.
+Uses native browser API to access device capabilities
 
 Speech to text is hidden for unsupported browsers.
+  Ex: http://localhost:4000/ on firefox (hidden)
+  On safari or chrome (button present and works)
 
-Ex: http://localhost:4000/ on firefox (hidden)
-On safari or chrome (button present and works)
-
-We will also need to add some additional fields:
+We may also need to add some additional fields:
   - to capture subsequent actions (i.e. the part was ordered and will arrive by 5:00pm)
   - comments
   - add enum to status and priority
 
 Links:
 Make a new request: http://localhost:4000/
+
+The requests space is the user facing aspect. All of one users requests will be here.
 View all requests: http://localhost:4000/requests
+
+The triage space is on the shop-side. An "admin" will see all requests from all users and can perform subsequent actions on the issue.
 Triage requests: http://localhost:4000/triage
+
+Sorting:
+Issues are sorted by urgency and date. All the urgent issues appear first with the newest issue on top.
 
 TODO:
 
@@ -55,6 +64,16 @@ TODO:
     c. image categorization
     d. prioritization
     e. next steps / recommended actions
+
+1. When a voice memo is sent, use AI/LLM to process the record and perform speech to text on the server and add this to the description.
+
+1. Use geofencing to associate a job site with an equipement list.
+  a. Populate the "Equipment/Unit Number (if applicable)" field with a list of machines on site.
+  b. use typeahead on the server or locally to match against a list of possible machines
+
+1. Implement a player for voice memos.
+
+1. add some user sorting options. Due first, oldest, etc.
 
 
 ## Runing the app locally:
