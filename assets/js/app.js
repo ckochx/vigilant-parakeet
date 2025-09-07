@@ -33,18 +33,28 @@ const SpeechRecognition = {
     this.audioChunks = []
     this.isRecording = false
 
-    // Handle speech recognition events from server
-    this.handleEvent("start-speech-recognition", () => {
-      this.startSpeechRecognition()
-    })
-
-    // Handle voice recording events from server
-    this.handleEvent("start-voice-recording", () => {
-      this.toggleVoiceRecording()
-    })
+    // Add click handler for speech recognition button
+    this.speechButton = this.el.querySelector('[data-speech-recognition]')
+    this.isListening = false
+    
+    // Hide speech button if not supported
+    if (this.speechButton) {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        this.speechButton.style.display = 'none'
+      } else {
+        this.speechButton.addEventListener('click', (e) => {
+          e.preventDefault()
+          if (this.isListening) {
+            this.stopSpeechRecognition()
+          } else {
+            this.startSpeechRecognition()
+          }
+        })
+      }
+    }
 
     // Add click handler for the voice recording button
-    this.voiceButton = this.el.querySelector('[phx-click="start-voice-recording"]')
+    this.voiceButton = this.el.querySelector('[data-voice-recording]')
     if (this.voiceButton) {
       this.voiceButton.addEventListener('click', (e) => {
         e.preventDefault()
@@ -54,11 +64,6 @@ const SpeechRecognition = {
   },
 
   startSpeechRecognition() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in this browser')
-      return
-    }
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
     this.recognition = new SpeechRecognition()
     
@@ -68,6 +73,8 @@ const SpeechRecognition = {
 
     this.recognition.onstart = () => {
       console.log('Speech recognition started')
+      this.isListening = true
+      this.updateSpeechUI(true)
     }
 
     this.recognition.onresult = (event) => {
@@ -80,13 +87,38 @@ const SpeechRecognition = {
 
     this.recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error)
+      this.isListening = false
+      this.updateSpeechUI(false)
     }
 
     this.recognition.onend = () => {
       console.log('Speech recognition ended')
+      this.isListening = false
+      this.updateSpeechUI(false)
     }
 
     this.recognition.start()
+  },
+
+  stopSpeechRecognition() {
+    if (this.recognition && this.isListening) {
+      this.recognition.stop()
+      console.log('Speech recognition stopped manually')
+    }
+  },
+
+  updateSpeechUI(isListening) {
+    if (this.speechButton) {
+      if (isListening) {
+        this.speechButton.innerHTML = '⏹️ Stop Listening'
+        this.speechButton.classList.remove('bg-blue-100', 'text-blue-700', 'hover:bg-blue-200')
+        this.speechButton.classList.add('bg-blue-500', 'text-white', 'hover:bg-blue-600', 'animate-pulse')
+      } else {
+        this.speechButton.innerHTML = '🎤 Speech to Text'
+        this.speechButton.classList.remove('bg-blue-500', 'text-white', 'hover:bg-blue-600', 'animate-pulse')
+        this.speechButton.classList.add('bg-blue-100', 'text-blue-700', 'hover:bg-blue-200')
+      }
+    }
   },
 
   toggleVoiceRecording() {

@@ -56,7 +56,7 @@ defmodule GearflowWeb.RequestLive.Form do
                   <div class="flex flex-col sm:flex-row gap-3 mb-3">
                     <button
                       type="button"
-                      phx-click="start-speech-recognition"
+                      data-speech-recognition
                       class="flex-1 sm:flex-none px-4 py-3 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 touch-manipulation"
                       title="Speech to text"
                     >
@@ -64,7 +64,7 @@ defmodule GearflowWeb.RequestLive.Form do
                     </button>
                     <button
                       type="button"
-                      phx-click="start-voice-recording"
+                      data-voice-recording
                       class="flex-1 sm:flex-none px-4 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 touch-manipulation"
                       title="Record voice memo"
                     >
@@ -310,15 +310,6 @@ defmodule GearflowWeb.RequestLive.Form do
     {:noreply, cancel_upload(socket, :attachments, ref)}
   end
 
-  def handle_event("start-speech-recognition", _params, socket) do
-    # This will trigger client-side JavaScript to start speech recognition
-    {:noreply, push_event(socket, "start-speech-recognition", %{})}
-  end
-
-  def handle_event("start-voice-recording", _params, socket) do
-    # This will trigger client-side JavaScript to start voice recording
-    {:noreply, push_event(socket, "start-voice-recording", %{})}
-  end
 
   def handle_event("speech-result", %{"text" => text}, socket) do
     # Update the form with the speech recognition result
