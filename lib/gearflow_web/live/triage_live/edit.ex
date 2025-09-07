@@ -252,28 +252,25 @@ defmodule GearflowWeb.TriageLive.Edit do
           
     <!-- Admin Actions -->
           <div class="bg-white rounded-lg shadow-md border border-slate-200 p-6">
-            <div class="flex items-center justify-between">
-              <div class="flex gap-4">
-                <.button
-                  type="submit"
-                  phx-disable-with="Saving..."
-                  class="px-6 py-2 bg-slate-600 text-white font-medium rounded-lg hover:bg-slate-700"
-                >
-                  Save Changes
-                </.button>
-                <.link
-                  navigate={~p"/triage"}
-                  class="px-6 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300"
-                >
-                  Cancel
-                </.link>
-              </div>
-
+            <div class="flex items-center justify-center gap-4">
+              <.button
+                type="submit"
+                phx-disable-with="Saving..."
+                class="px-6 py-2 bg-slate-600 text-white font-medium rounded-lg hover:bg-slate-700"
+              >
+                Save Changes
+              </.button>
+              <.link
+                navigate={~p"/triage"}
+                class="flex items-center px-6 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300"
+              >
+                Cancel
+              </.link>
               <button
                 type="button"
                 phx-click="delete_request"
                 data-confirm="Are you sure you want to delete this request? This action cannot be undone."
-                class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium border border-red-200"
+                class="px-6 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium border border-red-200"
               >
                 Delete Request
               </button>
